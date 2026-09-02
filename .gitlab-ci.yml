@@ -12,7 +12,7 @@ variables:
 
 pre-commit:
   stage: lint
-  image: python:DEFAULT_PYTHON
+  image: python:$DEFAULT_PYTHON
   before_script:
     - python -m pip install --upgrade pip
     - python -m pip install pre-commit
