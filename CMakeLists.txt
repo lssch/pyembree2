@@ -53,50 +53,52 @@ set(EMBREE_ROOT
 )
 
 set(EMBREE_ARCHIVE_PATH
-    "${CMAKE_BINARY_DIR}/_deps/${EMBREE_ARCHIVE}"
+    "${CMAKE_BINARY_DIR}/_deps"
 )
 
-file(DOWNLOAD
-    "${EMBREE_URL}"
-    "${EMBREE_ARCHIVE_PATH}"
-    SHOW_PROGRESS
-    STATUS EMBREE_DOWNLOAD_STATUS
-    TLS_VERIFY ON
-)
+if(NOT EXISTS "${EMBREE_ARCHIVE_PATH}")
 
-list(GET EMBREE_DOWNLOAD_STATUS 0 EMBREE_DOWNLOAD_CODE)
-
-if(NOT EMBREE_DOWNLOAD_CODE EQUAL 0)
-    list(GET EMBREE_DOWNLOAD_STATUS 1 EMBREE_DOWNLOAD_MESSAGE)
-
-    message(
-        FATAL_ERROR
-        "Failed to download Embree: ${EMBREE_DOWNLOAD_MESSAGE}"
+    file(DOWNLOAD
+        "${EMBREE_URL}"
+        "${EMBREE_ARCHIVE_PATH}"
+        SHOW_PROGRESS
+        STATUS EMBREE_DOWNLOAD_STATUS
+        TLS_VERIFY ON
     )
+
+    list(GET EMBREE_DOWNLOAD_STATUS 0 EMBREE_DOWNLOAD_CODE)
+
+    if(NOT EMBREE_DOWNLOAD_CODE EQUAL 0)
+        list(GET EMBREE_DOWNLOAD_STATUS 1 EMBREE_DOWNLOAD_MESSAGE)
+
+        message(FATAL_ERROR
+            "Failed to download Embree: ${EMBREE_DOWNLOAD_MESSAGE}"
+        )
+    endif()
+
 endif()
 
-file(MAKE_DIRECTORY "${EMBREE_ROOT}")
+if(NOT EXISTS "${EMBREE_ROOT}")
+    file(MAKE_DIRECTORY "${EMBREE_ROOT}")
 
-execute_process(
-    COMMAND "${CMAKE_COMMAND}" -E tar xf "${EMBREE_ARCHIVE_PATH}"
-    WORKING_DIRECTORY "${EMBREE_ROOT}"
-    RESULT_VARIABLE EMBREE_EXTRACT_RESULT
-)
+    execute_process(
+        COMMAND "${CMAKE_COMMAND}" -E tar xf "${EMBREE_ARCHIVE_PATH}"
+        WORKING_DIRECTORY "${EMBREE_ROOT}"
+        RESULT_VARIABLE EMBREE_EXTRACT_RESULT
+    )
 
-if(NOT EMBREE_EXTRACT_RESULT EQUAL 0)
-    message(FATAL_ERROR "Failed to extract Embree")
+    if(NOT EMBREE_EXTRACT_RESULT EQUAL 0)
+        message(FATAL_ERROR "Failed to extract Embree")
+    endif()
+
 endif()
+
 
 file(
     GLOB_RECURSE
     EMBREE_CONFIG
     "${EMBREE_ROOT}/*/embree-config.cmake"
 )
-
-message(STATUS "Embree config candidates:")
-foreach(CONFIG_FILE IN LISTS EMBREE_CONFIG)
-    message(STATUS "  ${CONFIG_FILE}")
-endforeach()
 
 if(NOT EMBREE_CONFIG)
     message(FATAL_ERROR
@@ -137,3 +139,52 @@ install(
     LIBRARY DESTINATION pyembree2
     RUNTIME DESTINATION pyembree2
 )
+
+if(UNIX AND NOT APPLE)
+
+    find_library(
+        EMBREE_RUNTIME_LIBRARY
+        NAMES embree4
+        PATHS
+            "${EMBREE_ROOT}"
+        PATH_SUFFIXES
+            lib
+        NO_DEFAULT_PATH
+    )
+
+    if(NOT EMBREE_RUNTIME_LIBRARY)
+        message(FATAL_ERROR
+            "Could not find Embree runtime library"
+        )
+    endif()
+
+    message(
+        STATUS
+        "Embree runtime library: ${EMBREE_RUNTIME_LIBRARY}"
+    )
+
+    install(
+        FILES "${EMBREE_RUNTIME_LIBRARY}"
+        DESTINATION pyembree2
+    )
+
+endif()
+
+
+if(UNIX AND NOT APPLE)
+
+    set_target_properties(
+        pyembree2
+        PROPERTIES
+        INSTALL_RPATH "$ORIGIN"
+    )
+
+elseif(APPLE)
+
+    set_target_properties(
+        pyembree2
+        PROPERTIES
+        INSTALL_RPATH "@loader_path"
+    )
+
+endif()
