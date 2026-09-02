@@ -23,8 +23,8 @@ ruff:
   stage: linting
   image: python:$DEFAULT_PYTHON
   script:
-    - uv pip install --system -e ".[dev]"
-    - ruff check src tests
+    - uv pip install --system ruff
+    - ruff check
 
 pytest:sanity:
   stage: test
