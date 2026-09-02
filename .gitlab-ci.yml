@@ -1,0 +1,73 @@
+stages:
+  - linting
+  - test
+  - build
+  - secret-detection
+
+variables:
+  SECRET_DETECTION_ENABLED: 'true'
+  DEFAULT_PYTHON: "3.14"
+  GIT_DEPTH: 0
+  CIBW_BUILD_VERBOSITY: "1"
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - /root/.cache/uv
+
+before_script:
+  - python -m pip install --upgrade pip
+  - pip install uv
+
+ruff:
+  stage: linting
+  image: python:$DEFAULT_PYTHON
+  script:
+    - uv pip install --system -e ".[dev]"
+    - ruff check src tests
+
+pytest:sanity:
+  stage: test
+  image: python:$PYTHON_VERSION
+  parallel:
+    matrix:
+      - PYTHON_VERSION: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+  script:
+    - uv pip install --system -e ".[dev]"
+    - pytest --junitxml=report.xml
+
+.wheels:
+  stage: build
+  script:
+    - python -m pip install cibuildwheel==3.4.1
+    - python -m cibuildwheel --output-dir dist
+  artifacts:
+    paths:
+      - dist/*.whl
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_TAG
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+wheels:linux:
+  extends: .wheels
+  image: python:$DEFAULT_PYTHON
+  tags:
+    - saas-linux-medium-amd64
+
+wheels:macos:
+  extends: .wheels
+  tags:
+    - saas-macos-medium-m1
+
+wheels:windows:
+  extends: .wheels
+  tags:
+    - saas-windows-medium-amd64
+
+secret_detection:
+  stage: secret-detection
+
+include:
+- template: Security/Secret-Detection.gitlab-ci.yml

@@ -1,0 +1,64 @@
+[build-system]
+requires = [
+    "setuptools>=61",
+    "setuptools_scm>=8",
+    "wheel",
+    "pybind11>=2.10",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyembree2"
+dynamic = ["version"]
+description = "Pyembee2: Yet another incomplete python wrapper for Embree, a high-performance ray tracing library from Intel"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Lars Schwarz", email = "lars.schwarz@fhgr.ch" },
+    { name = "Philipp Roebrock", email = "philipp.roebrock@fhgr.ch" }
+]
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+]
+
+[project.optional-dependencies]
+test = ["pytest", "trimesh[easy]"]
+dev = ["pytest", "trimesh[easy]", "ruff", "pre-commit"]
+
+[project.urls]
+Homepage = "https://gitlab.com/lssch/pyembree2"
+Issues = "https://gitlab.com/lssch/pyembree2/issues"
+
+[tool.setuptools_scm]
+tag_regex = "^v(?P<version>\\d+\\.\\d+\\.\\d+.*)$"
+version_scheme = "release-branch-semver"
+local_scheme = "no-local-version"
+write_to = "src/pyembree2/_version.py"
+
+[tool.setuptools]
+license-files = ["LICEN[CS]E*"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py314"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "W",   # warnings
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+]
+ignore = [
+    "E203",  # black compatibility
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
