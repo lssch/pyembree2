@@ -17,7 +17,7 @@ pre-commit:
     - python -m pip install --upgrade pip
     - python -m pip install pre-commit
   script:
-    - python -m pre-commit run --all-files
+    - pre-commit run --all-files
 
 .wheels:
   stage: build
