@@ -1,7 +1,7 @@
 stages:
   - linting
-  - test
   - build
+  - test
   - secret-detection
 
 variables:
@@ -26,16 +26,6 @@ ruff:
     - uv pip install --system ruff
     - ruff check
 
-pytest:sanity:
-  stage: test
-  image: python:$PYTHON_VERSION
-  parallel:
-    matrix:
-      - PYTHON_VERSION: ["3.10", "3.11", "3.12", "3.13", "3.14"]
-  script:
-    - uv pip install --system -e ".[dev]"
-    - pytest --junitxml=report.xml
-
 .wheels:
   stage: build
   script:
@@ -56,15 +46,28 @@ wheels:linux:
   tags:
     - saas-linux-medium-amd64
 
-wheels:macos:
-  extends: .wheels
-  tags:
-    - saas-macos-medium-m1
+#wheels:macos:
+#  extends: .wheels
+#  tags:
+#    - saas-macos-medium-m1
 
-wheels:windows:
-  extends: .wheels
-  tags:
-    - saas-windows-medium-amd64
+#wheels:windows:
+#  extends: .wheels
+#  tags:
+#    - saas-windows-medium-amd64
+
+pytest:sanity:
+  stage: test
+  image: python:$PYTHON_VERSION
+  needs:
+    - job: wheels:linux
+      artifacts: true
+  parallel:
+    matrix:
+      - PYTHON_VERSION: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+  script:
+    - uv pip install --system -e ".[dev]"
+    - pytest --junitxml=report.xml
 
 secret_detection:
   stage: secret-detection
