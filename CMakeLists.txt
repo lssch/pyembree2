@@ -44,7 +44,6 @@ elseif(UNIX)
     )
 endif()
 
-file(GLOB EMBREE_RUNTIME_LIBRARIES "${EMBREE_RUNTIME_GLOB}")
 if(NOT EMBREE_RUNTIME_LIBRARIES)
     message(FATAL_ERROR "Could not find Embree runtime libraries")
 endif()
