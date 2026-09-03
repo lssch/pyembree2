@@ -31,6 +31,7 @@ dev = [
     "trimesh[easy]",
     "ruff",
     "pre-commit",
+    "cibuildwheel"
 ]
 
 [project.urls]
