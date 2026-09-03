@@ -48,8 +48,6 @@ wheels:linux:
     - python -m pip install --upgrade pip
     - apt-get update
     - apt-get install -y docker.io
-    - docker --version
-    - docker info
     - python -m pip install cibuildwheel==3.4.1
   tags:
     - saas-linux-medium-amd64

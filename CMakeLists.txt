@@ -38,7 +38,10 @@ if(APPLE)
 elseif(WIN32)
     set(EMBREE_RUNTIME_GLOB "${EMBREE_ROOT_DIR}/bin/*.dll")
 elseif(UNIX)
-    set(EMBREE_RUNTIME_GLOB "${EMBREE_ROOT_DIR}/lib/*.so*")
+    file(GLOB EMBREE_RUNTIME_LIBRARIES
+        "${EMBREE_ROOT_DIR}/lib/*.so*"
+        "${EMBREE_ROOT_DIR}/lib64/*.so*"
+    )
 endif()
 
 file(GLOB EMBREE_RUNTIME_LIBRARIES "${EMBREE_RUNTIME_GLOB}")
