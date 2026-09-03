@@ -30,13 +30,10 @@ install(
     RUNTIME DESTINATION pyembree2
 )
 
-# Install Embree runtime for prebuilt Embree.
-if(DEFINED EMBREE_RUNTIME_LIBRARY)
-    install(
-        FILES "${EMBREE_RUNTIME_LIBRARY}"
-        DESTINATION pyembree2
-    )
-endif()
+install(
+    FILES ${EMBREE_RUNTIME_LIBRARY}
+    DESTINATION pyembree2
+)
 
 if(APPLE)
     set_target_properties(
