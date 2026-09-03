@@ -42,7 +42,7 @@ find_package(embree ${EMBREE_VERSION} EXACT CONFIG REQUIRED
 )
 
 file(GLOB EMBREE_RUNTIME_LIBRARY
-    "${embree_SOURCE_DIR}/lib/*.dylib"
-    "${embree_SOURCE_DIR}/lib/*.so*"
+    "${embree_SOURCE_DIR}/lib*/*.dylib"
+    "${embree_SOURCE_DIR}/lib*/*.so*"
     "${embree_SOURCE_DIR}/bin/*.dll"
 )
