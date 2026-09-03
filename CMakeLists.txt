@@ -10,19 +10,8 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
 endif()
 
-include(FetchContent)
-
-set(EMBREE_TASKING_SYSTEM "INTERNAL" CACHE STRING "" FORCE)
-set(EMBREE_ISPC_SUPPORT OFF CACHE BOOL "" FORCE)
-set(EMBREE_TUTORIALS OFF CACHE BOOL "" FORCE)
-
-FetchContent_Declare(
-    embree
-    GIT_REPOSITORY https://github.com/RenderKit/embree.git
-    GIT_TAG v4.4.0
-)
-
-FetchContent_MakeAvailable(embree)
+set(EMBREE_VERSION 4.4.1)
+include(cmake/fetch-embree.cmake)
 
 find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
 find_package(pybind11 CONFIG REQUIRED)
