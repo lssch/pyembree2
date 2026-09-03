@@ -26,7 +26,6 @@ pybind11_add_module(
 
 target_link_libraries(pyembree2 PRIVATE embree)
 
-
 install(
     TARGETS pyembree2
     LIBRARY DESTINATION pyembree2
