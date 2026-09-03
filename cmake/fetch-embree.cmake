@@ -69,9 +69,9 @@ else()
     file(GLOB EMBREE_DIRS
         "${EMBREE_ROOT}/*"
     )
-
-    list(GET EMBREE_DIRS 0 EMBREE_ROOT)
-
+    if(NOT EXISTS "${EMBREE_ROOT}/include")
+        list(GET EMBREE_DIRS 0 EMBREE_ROOT)
+    endif()
 
     if(WIN32)
         add_library(embree UNKNOWN IMPORTED GLOBAL)
