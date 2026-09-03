@@ -19,6 +19,7 @@ find_package(pybind11 CONFIG REQUIRED)
 
 pybind11_add_module(
     pyembree2
+    src/pyembree2/triangle_mesh.h
     src/pyembree2/signed_distance.cpp
     src/pyembree2/ray_tracing.cpp
 )
@@ -34,9 +35,9 @@ install(
 
 # Bundle Embree runtime
 if(APPLE)
-    set(EMBREE_RUNTIME_GLOB "${EMBREE_ROOT_DIR}/lib/*.dylib")
+    file(GLOB EMBREE_RUNTIME_LIBRARIES "${EMBREE_ROOT_DIR}/lib/*.dylib")
 elseif(WIN32)
-    set(EMBREE_RUNTIME_GLOB "${EMBREE_ROOT_DIR}/bin/*.dll")
+    file(GLOB EMBREE_RUNTIME_LIBRARIES "${EMBREE_ROOT_DIR}/bin/*.dll")
 elseif(UNIX)
     file(GLOB EMBREE_RUNTIME_LIBRARIES
         "${EMBREE_ROOT_DIR}/lib/*.so*"

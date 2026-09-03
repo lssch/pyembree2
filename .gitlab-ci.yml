@@ -25,7 +25,7 @@ pytest:
   before_script:
     - python -m pip install --upgrade pip
   script:
-    - python -m pip install -v ".[dev]"
+    - python -m pip install -e ".[dev]"
     - python -m pytest --junitxml=report.xml
 
 .wheels:

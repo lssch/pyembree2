@@ -4,6 +4,7 @@ _version.py
 **.so
 build/
 wheelhouse/
+uv.lock
 
 .venv
 .vscode
