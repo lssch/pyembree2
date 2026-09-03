@@ -28,6 +28,7 @@ jobs:
 
   pytest:
     name: Test
+    needs: [pre-commit]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -47,6 +48,7 @@ jobs:
 
   wheels-linux:
     name: Wheels / Linux ${{ matrix.arch }}
+    needs: [pre-commit, pytest]
     runs-on: ${{ matrix.runs-on }}
     if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     strategy:
@@ -77,6 +79,7 @@ jobs:
 
   wheels-macos:
     name: Wheels / macOS arm64
+    needs: [pre-commit, pytest]
     runs-on: macos-14
     if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     steps:
@@ -99,6 +102,7 @@ jobs:
 
   wheels-windows:
     name: Wheels / Windows x86_64
+    needs: [pre-commit, pytest]
     runs-on: windows-latest
     if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     steps:
