@@ -57,7 +57,7 @@ build = "cp310-* cp311-* cp312-* cp313-* cp314-*"
 skip = "*i686 *-win32 *musllinux*"
 
 [tool.cibuildwheel.windows]
-before-build = "pip install delvewheel && python {project}\\package\\fetch-embree.py --install embree4"
+before-build = "pip install delvewheel"
 repair-wheel-command = "delvewheel repair --add-path embree4\\bin --no-mangle tbb12.dll;embree4.dll -w {dest_dir} {wheel}"
 
 [tool.cibuildwheel.macos]
