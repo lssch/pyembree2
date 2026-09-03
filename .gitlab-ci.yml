@@ -30,9 +30,6 @@ pytest:
 
 .wheels:
   stage: build
-  before_script:
-    - python -m pip install --upgrade pip
-    - python -m pip install cibuildwheel==3.4.1
   script:
     - python -m cibuildwheel --output-dir dist
   artifacts:
@@ -44,7 +41,7 @@ pytest:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
-wheels:linux:
+wheels:linux:x86_64:
   extends: .wheels
   image: python:${DEFAULT_PYTHON}
   services:
@@ -53,6 +50,7 @@ wheels:linux:
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
+    CIBW_ARCHS: "x86_64"
   before_script:
     - python -m pip install --upgrade pip
     - apt-get update
@@ -60,6 +58,47 @@ wheels:linux:
     - python -m pip install cibuildwheel==3.4.1
   tags:
     - saas-linux-medium-amd64
+
+wheels:linux:aarch64:
+  extends: .wheels
+  image: python:${DEFAULT_PYTHON}
+  services:
+    - name: docker:27-dind
+      command: ["--tls=false"]
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+    CIBW_ARCHS: "aarch64"
+  before_script:
+    - python -m pip install --upgrade pip
+    - apt-get update
+    - apt-get install -y docker.io
+    - python -m pip install cibuildwheel==3.4.1
+  tags:
+    - saas-linux-medium-arm64
+
+wheels:macos:
+  extends: .wheels
+  variables:
+    CIBW_ARCHS: "arm64"
+  before_script:
+    - python3 -m pip install --upgrade pip
+    - python3 -m pip install cibuildwheel==3.4.1
+  script:
+    - python3 -m cibuildwheel --output-dir dist
+  tags:
+    - saas-macos-medium-m1
+  image: macos-15-xcode-16
+
+wheels:windows:
+  extends: .wheels
+  variables:
+    CIBW_ARCHS: "AMD64"
+  before_script:
+    - python -m pip install --upgrade pip
+    - python -m pip install cibuildwheel==3.4.1
+  tags:
+    - saas-windows-medium-amd64
 
 secret_detection:
   stage: secret-detection
