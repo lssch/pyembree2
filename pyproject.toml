@@ -54,13 +54,18 @@ provider = "scikit_build_core.metadata.setuptools_scm"
 
 [tool.cibuildwheel]
 build = "cp310-* cp311-* cp312-* cp313-* cp314-*"
-skip = "*-musllinux_*"
+skip = "*i686 *-win32 *musllinux*"
 
-[tool.cibuildwheel.windows.environment]
-CIBW_ARCHS = "AMD64"
+[tool.cibuildwheel.windows]
+before-build = "pip install delvewheel && python {project}\\package\\fetch-embree.py --install embree4"
+repair-wheel-command = "delvewheel repair --add-path embree4\\bin --no-mangle tbb12.dll;embree4.dll -w {dest_dir} {wheel}"
 
-[tool.cibuildwheel.macos.environment]
-MACOSX_DEPLOYMENT_TARGET = "10.11"
+[tool.cibuildwheel.macos]
+environment = { MACOSX_DEPLOYMENT_TARGET = "13.0" }
+repair-wheel-command = "DYLD_LIBRARY_PATH=embree4/lib delocate-listdeps -a {wheel} && DYLD_LIBRARY_PATH=embree4/lib delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}"
+
+[tool.cibuildwheel.linux]
+repair-wheel-command = "LD_LIBRARY_PATH=`realpath embree4/lib`; auditwheel repair -w {dest_dir} {wheel}"
 
 [tool.ruff]
 line-length = 88
