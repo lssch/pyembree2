@@ -1,10 +1,8 @@
 [build-system]
 requires = [
-    "scikit-build-core>=0.11",
+    "scikit-build-core>=1",
     "pybind11>=2.10",
-    "setuptools_scm>=8",
-    "setuptools>=61.0",
-    "wheel"
+    "setuptools_scm>=10",
 ]
 build-backend = "scikit_build_core.build"
 
@@ -19,7 +17,7 @@ authors = [
     { name = "Philipp Roebrock", email = "philipp.roebrock@fhgr.ch" }
 ]
 requires-python = ">=3.10"
-dependencies = ["numpy>=1.21"]
+dependencies = ["numpy>=2.0"]
 
 [project.optional-dependencies]
 test = [
@@ -27,6 +25,7 @@ test = [
     "trimesh[easy]",
 ]
 dev = [
+    "build",
     "pytest",
     "trimesh[easy]",
     "ruff",
@@ -42,7 +41,6 @@ Issues = "https://gitlab.com/lssch/pyembree2/issues"
 tag_regex = "^v(?P<version>\\d+\\.\\d+\\.\\d+.*)$"
 version_scheme = "release-branch-semver"
 local_scheme = "no-local-version"
-write_to = "src/pyembree2/_version.py"
 
 [tool.scikit-build]
 minimum-version = "build-system.requires"

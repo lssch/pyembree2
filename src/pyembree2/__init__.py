@@ -1,4 +1,5 @@
-from ._version import __version__
+from importlib.metadata import version
+
 from .pyembree2 import *  # noqa: F403
 
-__all__ = ["__version__"]
+__version__ = version("pyembree2")
