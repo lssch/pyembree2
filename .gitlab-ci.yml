@@ -1,7 +1,7 @@
 stages:
   - lint
-  - build
   - test
+  - build
   - secret-detection
 
 variables:
@@ -18,6 +18,15 @@ pre-commit:
     - python -m pip install pre-commit
   script:
     - pre-commit run --all-files
+
+pytest:
+  stage: test
+  image: python:$DEFAULT_PYTHON
+  before_script:
+    - python -m pip install --upgrade pip
+  script:
+    - python -m pip install -v ".[dev]"
+    - python -m pytest --junitxml=report.xml
 
 .wheels:
   stage: build
@@ -51,31 +60,6 @@ wheels:linux:
     - python -m pip install cibuildwheel==3.4.1
   tags:
     - saas-linux-medium-amd64
-
-pytest:sanity:
-  stage: test
-  needs:
-    - job: wheels:linux
-      artifacts: true
-  parallel:
-    matrix:
-      - PYTHON_VERSION:
-          - "3.10"
-          - "3.11"
-          - "3.12"
-          - "3.13"
-          - "3.14"
-  image: python:$PYTHON_VERSION
-  before_script:
-    - python -m pip install --upgrade pip
-  script:
-    - python -m pip install --system dist/*.whl
-    - python -m pip install --system pytest
-    - python -m pytest --junitxml=report.xml
-  artifacts:
-    when: always
-    reports:
-      junit: report.xml
 
 secret_detection:
   stage: secret-detection
