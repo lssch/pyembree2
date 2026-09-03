@@ -74,6 +74,5 @@ else()
 
     message(STATUS "Embree CMake directory: ${EMBREE_CMAKE_DIR}")
     list(PREPEND CMAKE_PREFIX_PATH "${EMBREE_CMAKE_DIR}")
+    find_package(embree 4 CONFIG REQUIRED)
 endif()
-
-find_package(embree 4 CONFIG REQUIRED)

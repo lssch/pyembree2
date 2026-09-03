@@ -13,7 +13,6 @@ endif()
 set(EMBREE_VERSION "4.4.1")
 include(cmake/fetch-embree.cmake)
 
-find_package(embree 4 CONFIG REQUIRED)
 find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
 find_package(pybind11 CONFIG REQUIRED)
 
