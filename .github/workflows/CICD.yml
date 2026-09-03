@@ -34,12 +34,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - run: python -m pip install --upgrade pip
       - run: python -m pip install -e ".[dev]"
-      - run: python -m pytest --junitxml=report.xml
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: pytest-report
-          path: report.xml
+      - run: python -m pytest
 
   wheels:
     name: Build wheel on ${{ matrix.os }}
