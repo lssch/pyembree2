@@ -35,8 +35,21 @@ else()
         URL "${EMBREE_URL}"
     )
     FetchContent_MakeAvailable(embree)
+
+    file(GLOB_RECURSE EMBREE_CONFIG_FILES
+        "${embree_SOURCE_DIR}/*embree-config.cmake"
+        "${embree_SOURCE_DIR}/*embreeConfig.cmake"
+    )
+    if(NOT EMBREE_CONFIG_FILES)
+        message(FATAL_ERROR
+            "Could not locate embree-config.cmake under ${embree_SOURCE_DIR}"
+        )
+    endif()
+    list(GET EMBREE_CONFIG_FILES 0 EMBREE_CONFIG_FILE)
+    get_filename_component(embree_DIR "${EMBREE_CONFIG_FILE}" DIRECTORY)
+
     find_package(embree ${EMBREE_VERSION} EXACT CONFIG REQUIRED
-        PATHS "${embree_SOURCE_DIR}"
+        PATHS "${embree_DIR}"
         NO_DEFAULT_PATH
     )
 endif()
