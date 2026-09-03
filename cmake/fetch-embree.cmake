@@ -42,8 +42,7 @@ if(EMBREE_BUILD_FROM_SOURCE)
         GIT_TAG "v${EMBREE_VERSION}"
     )
     FetchContent_MakeAvailable(embree_prebuilt)
-
-    set(EMBREE_ROOT_DIR "${embree_prebuilt_SOURCE_DIR}")
+    set(EMBREE_ROOT_DIR "${embree_prebuilt_BINARY_DIR}")
 else()
     set(EMBREE_URL "https://github.com/RenderKit/embree/releases/download/v${EMBREE_VERSION}/${EMBREE_ARCHIVE}")
     message(STATUS "Embree URL: ${EMBREE_URL}")

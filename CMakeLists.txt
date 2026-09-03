@@ -18,7 +18,6 @@ find_package(pybind11 CONFIG REQUIRED)
 
 pybind11_add_module(
     pyembree2
-    src/pyembree2/triangle_mesh.h
     src/pyembree2/signed_distance.cpp
     src/pyembree2/ray_tracing.cpp
 )
@@ -41,6 +40,9 @@ elseif(UNIX)
         "${EMBREE_ROOT_DIR}/lib/*.so*"
         "${EMBREE_ROOT_DIR}/lib64/*.so*"
     )
+    if(NOT EMBREE_RUNTIME_LIBRARIES)
+        file(GLOB_RECURSE EMBREE_RUNTIME_LIBRARIES "${EMBREE_ROOT_DIR}/*.so*")
+    endif()
 endif()
 
 if(NOT EMBREE_RUNTIME_LIBRARIES)
