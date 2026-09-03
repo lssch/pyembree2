@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 4.0)
 
 project(pyembree2 LANGUAGES CXX)
 
@@ -10,8 +10,19 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
 endif()
 
-set(EMBREE_VERSION "4.4.1")
-include(cmake/fetch-embree.cmake)
+include(FetchContent)
+
+set(EMBREE_TASKING_SYSTEM "INTERNAL" CACHE STRING "" FORCE)
+set(EMBREE_ISPC_SUPPORT OFF CACHE BOOL "" FORCE)
+set(EMBREE_TUTORIALS OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+    embree
+    GIT_REPOSITORY https://github.com/RenderKit/embree.git
+    GIT_TAG v4.4.0
+)
+
+FetchContent_MakeAvailable(embree)
 
 find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
 find_package(pybind11 CONFIG REQUIRED)
@@ -30,40 +41,25 @@ install(
     RUNTIME DESTINATION pyembree2
 )
 
-# Bundle Embree runtime
-if(APPLE)
-    file(GLOB EMBREE_RUNTIME_LIBRARIES "${EMBREE_ROOT_DIR}/lib/*.dylib")
-elseif(WIN32)
-    file(GLOB EMBREE_RUNTIME_LIBRARIES "${EMBREE_ROOT_DIR}/bin/*.dll")
-elseif(UNIX)
-    file(GLOB EMBREE_RUNTIME_LIBRARIES
-        "${EMBREE_ROOT_DIR}/lib/*.so*"
-        "${EMBREE_ROOT_DIR}/lib64/*.so*"
-    )
-    if(NOT EMBREE_RUNTIME_LIBRARIES)
-        file(GLOB_RECURSE EMBREE_RUNTIME_LIBRARIES "${EMBREE_ROOT_DIR}/*.so*")
-    endif()
-endif()
+install(
+    TARGETS embree
+    RUNTIME DESTINATION pyembree2
+    LIBRARY DESTINATION pyembree2
+    ARCHIVE DESTINATION pyembree2
+)
 
-if(NOT EMBREE_RUNTIME_LIBRARIES)
-    message(FATAL_ERROR "Could not find Embree runtime libraries")
-endif()
-install(FILES ${EMBREE_RUNTIME_LIBRARIES} DESTINATION pyembree2)
-
-# Runtime search path
 if(APPLE)
     set_target_properties(
         pyembree2
         PROPERTIES
-        INSTALL_RPATH "@loader_path"
-        INSTALL_RPATH_USE_LINK_PATH FALSE
+            INSTALL_RPATH "@loader_path"
+            BUILD_WITH_INSTALL_RPATH OFF
     )
 elseif(UNIX)
     set_target_properties(
         pyembree2
         PROPERTIES
-        INSTALL_RPATH "$ORIGIN"
-        INSTALL_RPATH_USE_LINK_PATH FALSE
+            INSTALL_RPATH "$ORIGIN"
+            BUILD_WITH_INSTALL_RPATH OFF
     )
 endif()
-# Windows: no RPATH needed, DLLs are found next to the extension automatically.
