@@ -1,12 +1,6 @@
-
-#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <format>
-#include <limits>
-#include <stdexcept>
-#include <tuple>
 #include <vector>
 
 #include <embree4/rtcore.h>
@@ -234,56 +228,55 @@ run_distance_query(const std::vector<triangle_mesh> &meshes,
                    py::array_t<double> points, bool compute_sign) {
 
   // Validate meshes
+  // Validate meshes
   for (ssize_t i = 0; i < meshes.size(); ++i) {
     const auto &mesh = meshes[i];
     auto vertices = mesh.vertices.request();
     auto faces = mesh.faces.request();
 
     if (vertices.ndim != 2 || vertices.shape[1] != 3) {
-      throw std::invalid_argument(
-          std::format("mesh {}: vertices must have shape (N, 3)", i));
+      throw std::invalid_argument("mesh " + std::to_string(i) +
+                                  ": vertices must have shape (N, 3)");
     }
 
     if (!(mesh.vertices.flags() & py::array::c_style)) {
-      throw std::invalid_argument(
-          std::format("mesh {}: vertices must be C-contiguous", i));
+      throw std::invalid_argument("mesh " + std::to_string(i) +
+                                  ": vertices must be C-contiguous");
     }
 
     if (faces.ndim != 2 || faces.shape[1] != 3) {
-      throw std::invalid_argument(
-          std::format("mesh {}: faces must have shape (N, 3)", i));
+      throw std::invalid_argument("mesh " + std::to_string(i) +
+                                  ": faces must have shape (N, 3)");
     }
 
     if (!(mesh.faces.flags() & py::array::c_style)) {
-      throw std::invalid_argument(
-          std::format("mesh {}: faces must be C-contiguous", i));
+      throw std::invalid_argument("mesh " + std::to_string(i) +
+                                  ": faces must be C-contiguous");
     }
 
     if (compute_sign) {
       if (mesh.vertex_normals.size() == 0) {
-        throw std::invalid_argument(
-            std::format("mesh {}: vertex_normals must be provided for "
-                        "signed_distance calculation",
-                        i));
+        throw std::invalid_argument("mesh " + std::to_string(i) +
+                                    ": vertex_normals must be provided for "
+                                    "signed_distance calculation");
       }
 
       auto normals = mesh.vertex_normals.request();
 
       if (normals.ndim != 2 || normals.shape[1] != 3) {
-        throw std::invalid_argument(
-            std::format("mesh {}: vertex_normals must have shape (N, 3)", i));
+        throw std::invalid_argument("mesh " + std::to_string(i) +
+                                    ": vertex_normals must have shape (N, 3)");
       }
 
       if (normals.shape[0] != vertices.shape[0]) {
         throw std::invalid_argument(
-            std::format("mesh {}: vertex_normals must have the same number of "
-                        "rows as vertices",
-                        i));
+            "mesh " + std::to_string(i) +
+            ": vertex_normals must have the same number of rows as vertices");
       }
 
       if (!(mesh.vertex_normals.flags() & py::array::c_style)) {
-        throw std::invalid_argument(
-            std::format("mesh {}: vertex_normals must be C-contiguous", i));
+        throw std::invalid_argument("mesh " + std::to_string(i) +
+                                    ": vertex_normals must be C-contiguous");
       }
     }
   }
