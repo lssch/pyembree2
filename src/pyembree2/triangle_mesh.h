@@ -6,4 +6,5 @@ namespace py = pybind11;
 struct triangle_mesh {
   py::array_t<float> vertices;
   py::array_t<uint32_t> faces;
+  py::array_t<float> vertex_normals;
 };
