@@ -3,8 +3,8 @@
 [![Pipeline Status](https://github.com/lssch/pyembree2/actions/workflows/ci.yml/badge.svg)](https://github.com/lssch/pyembree2/actions/workflows/ci.yml)
 [![Pipeline Status](https://github.com/lssch/pyembree2/actions/workflows/release.yml/badge.svg)](https://github.com/lssch/pyembree2/actions/workflows/release.yml)
 ![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Flssch%2Fpyembree2%2Frefs%2Fheads%2Fmain%2Fpyproject.toml)
-![PyPI Version](https://img.shields.io/pypi/v/pyembree2)
-![PyPI Wheel](https://img.shields.io/pypi/wheel/pyembree2)
+![PyPI Version](https://img.shields.io/pypi/v/pyembree2?pypiBaseUrl=https%3A%2F%2Fpypi.org)
+![PyPI Wheel](https://img.shields.io/pypi/wheel/pyembree2?pypiBaseUrl=https%3A%2F%2Fpypi.org)
 
 Yet another Python wrapper for [Intel Embree](https://www.embree.org/), a high-performance ray tracing library.
 
