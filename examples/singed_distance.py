@@ -31,8 +31,11 @@ if __name__ == "__main__":
         dtype=float,
     )
 
-    closest_points, mesh_index, distances, triangle_id = pyembree2.distance(
+    mesh_indices, face_indices, points, singed_distances = pyembree2.distance(
         meshes=[mesh], points=query
     )
 
-    print(closest_points)
+    print(f"mesh_indices: {mesh_indices}")
+    print(f"face_indices: {face_indices}")
+    print(f"points: {points}")
+    print(f"singed_distances: {singed_distances}")

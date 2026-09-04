@@ -52,15 +52,17 @@ def test_distance_multiple_meshes(random_generator):
         vertices=trimesh_1_mesh.vertices, faces=trimesh_1_mesh.faces
     )
     (
-        pyembree_closest_points,
         pyembree_mesh_index,
-        pyembree_distances,
         pyembree_triangle_id,
+        pyembree_closest_points,
+        pyembree_singed_distances,
     ) = pyembree2.distance(meshes=[pyembree_0_mesh, pyembree_1_mesh], points=points)
 
+    np.testing.assert_equal(trimesh_mesh_index, pyembree_mesh_index)
+    np.testing.assert_equal(trimesh_triangle_id, pyembree_triangle_id)
     np.testing.assert_allclose(
         trimesh_closest_points, pyembree_closest_points, atol=1e-6
     )
-    np.testing.assert_equal(trimesh_mesh_index, pyembree_mesh_index)
-    np.testing.assert_allclose(trimesh_distances, pyembree_distances, atol=1e-6)
-    np.testing.assert_equal(trimesh_triangle_id, pyembree_triangle_id)
+    np.testing.assert_allclose(
+        trimesh_distances, np.abs(pyembree_singed_distances), atol=1e-6
+    )

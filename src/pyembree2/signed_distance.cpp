@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <embree4/rtcore.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
@@ -186,11 +187,8 @@ static bool point_query_callback(RTCPointQueryFunctionArguments *args) {
 // Distance query
 // -----------------------------------------------------------------------------
 
-std::tuple<py::array_t<double>,   // closest points
-           py::array_t<uint32_t>, // mesh IDs
-           py::array_t<double>,   // distances
-           py::array_t<uint32_t>  // triangle IDs
-           >
+std::tuple<py::array_t<uint32_t>, py::array_t<uint32_t>, py::array_t<double>,
+           py::array_t<double>>
 distance(std::vector<triangle_mesh> meshes, py::array_t<double> points) {
 
   // ---------------------------------------------------------------------------
@@ -380,8 +378,8 @@ distance(std::vector<triangle_mesh> meshes, py::array_t<double> points) {
   rtcReleaseScene(scene);
   rtcReleaseDevice(device);
 
-  return std::make_tuple(std::move(closest_points), std::move(mesh_indices),
-                         std::move(distances), std::move(triangle_indices));
+  return std::make_tuple(std::move(mesh_indices), std::move(triangle_indices),
+                         std::move(closest_points), std::move(distances));
 }
 
 PYBIND11_MODULE(pyembree2, m, py::mod_gil_not_used()) {
