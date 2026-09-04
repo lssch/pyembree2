@@ -31,11 +31,11 @@ if __name__ == "__main__":
         dtype=float,
     )
 
-    mesh_indices, face_indices, points, singed_distances = pyembree2.distance(
+    mesh_indices, face_indices, points, signed_distances = pyembree2.unsigned_distance(
         meshes=[mesh], points=query
     )
 
     print(f"mesh_indices: {mesh_indices}")
     print(f"face_indices: {face_indices}")
     print(f"points: {points}")
-    print(f"singed_distances: {singed_distances}")
+    print(f"signed_distances: {signed_distances}")

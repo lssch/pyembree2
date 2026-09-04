@@ -19,8 +19,8 @@ The C++ implementation handles the Embree device, scene, geometry, and query man
 import pyembree2
 
 mesh = pyembree2.triangle_mesh(vertices=..., faces=...)
-ret = pyembree2.distance(meshes=[mesh], points=...)
-mesh_indices, face_indices, points, singed_distances = ret
+ret = pyembree2.unsigned_distance(meshes=[mesh], points=...)
+mesh_indices, face_indices, points, signed_distances = ret
 ```
 
 ## Requirements
@@ -77,9 +77,6 @@ This installation is for **contributors** who want to run tests or modify the co
     ```
 
 ## Examples
-
-### Singed distance
-https://github.com/lssch/pyembree2/blob/main/examples/singed_distance.py?plain=1
-
+### Signed distance
+### Unsigned distance
 ### Ray tracing
-https://github.com/lssch/pyembree2/blob/main/examples/ray_tracing.py?plain=1
