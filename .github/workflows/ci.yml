@@ -1,0 +1,39 @@
+name: CI
+
+on: [push, pull_request]
+
+env:
+  DEFAULT_PYTHON: "3.14"
+  CIBW_BUILD_VERBOSITY: "1"
+
+jobs:
+  pre-commit:
+    name: Lint (pre-commit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - run: python -m pip install pre-commit
+      - run: pre-commit run --all-files
+
+  pytest:
+    name: Test
+    needs: [pre-commit]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - run: python -m pip install -e ".[test]"
+      - run: python -m pytest
+
+  wheels:
+    needs: [pytest]
+    uses: ./.github/workflows/build-wheels.yml
