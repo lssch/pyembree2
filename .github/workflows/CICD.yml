@@ -91,7 +91,7 @@ jobs:
     permissions:
       contents: write
     name: Create GitHub Release
-    needs: [pypi]
+    needs: [testpypi]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
