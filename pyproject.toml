@@ -9,7 +9,7 @@ build-backend = "scikit_build_core.build"
 [project]
 name = "pyembree2"
 dynamic = ["version"]
-description = "Pyembree2: Yet another incomplete Python wrapper for Embree, a high-performance ray tracing library from Intel"
+description = "Pyembree2: Yet another Python wrapper for Embree, a high-performance ray tracing library from Intel"
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [

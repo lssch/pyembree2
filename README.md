@@ -1,14 +1,20 @@
 # pyembree2
 
-[![Pipeline Status](https://github.com/lssch/pyembree2/actions/workflows/CICD.yml/badge.svg)](https://github.com/lssch/pyembree2/actions/workflows/CICD.yml)
+[![Pipeline Status](https://github.com/lssch/pyembree2/actions/workflows/ci.yml/badge.svg)](https://github.com/lssch/pyembree2/actions/workflows/ci.yml)
+[![Pipeline Status](https://github.com/lssch/pyembree2/actions/workflows/release.yml/badge.svg)](https://github.com/lssch/pyembree2/actions/workflows/release.yml)
 ![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Flssch%2Fpyembree2%2Frefs%2Fheads%2Fmain%2Fpyproject.toml)
-![PyPI Version](https://img.shields.io/pypi/v/pyembree2?pypiBaseUrl=https%3A%2F%2Ftest.pypi.org)
-![PyPI Wheel](https://img.shields.io/pypi/wheel/pyembree2?pypiBaseUrl=https%3A%2F%2Ftest.pypi.org)
+![PyPI Version](https://img.shields.io/pypi/v/pyembree2)
+![PyPI Wheel](https://img.shields.io/pypi/wheel/pyembree2)
 
-Yet another incomplete Python wrapper for [Intel Embree](https://www.embree.org/), a high-performance ray tracing library.
+Yet another Python wrapper for [Intel Embree](https://www.embree.org/), a high-performance ray tracing library.
 
-> [!NOTE]  
-> Note: As all other python wrapper, pyembree2 doen't expose the full Embree API.
+> [!NOTE]
+> `pyembree2` is not intended to expose the full Embree API. It provides a small subset of Embree's functionality through a Python-friendly interface.
+
+## Supported functions
+* `signed_distance`
+* `unsigned_distance`
+* `ray_trace`
 
 ## Architecture
 pyembree2 is implemented primarily in C++, with Python providing a thin interface to a small set of well-defined functions for **signed-distance queries** and **ray tracing**.
@@ -75,8 +81,3 @@ This installation is for **contributors** who want to run tests or modify the co
     ```bash
     pytest -v tests
     ```
-
-## Examples
-### Signed distance
-### Unsigned distance
-### Ray tracing
