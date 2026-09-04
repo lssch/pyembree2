@@ -59,6 +59,4 @@ def test_unsigned_distance_multiple_meshes(random_generator):
     np.testing.assert_allclose(
         trimesh_closest_points, pyembree_closest_points, atol=1e-6
     )
-    np.testing.assert_allclose(
-        trimesh_distances, np.abs(pyembree_singed_distances), atol=1e-6
-    )
+    np.testing.assert_allclose(trimesh_distances, pyembree_singed_distances, atol=1e-6)

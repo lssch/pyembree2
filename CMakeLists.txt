@@ -18,6 +18,8 @@ find_package(pybind11 CONFIG REQUIRED)
 
 pybind11_add_module(
     pyembree2
+    src/pyembree2/module.cpp
+    src/pyembree2/triangle_mesh.cpp
     src/pyembree2/distance.cpp
     src/pyembree2/ray_tracing.cpp
 )

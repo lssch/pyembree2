@@ -1,13 +1,11 @@
 #include <cmath>
 #include <cstddef>
-#include <cstdint>
-#include <vector>
 
 #include <embree4/rtcore.h>
 #include <pybind11/numpy.h>
-#include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include "distance.h"
 #include "triangle_mesh.h"
 #include "vec3.h"
 
@@ -228,57 +226,8 @@ run_distance_query(const std::vector<triangle_mesh> &meshes,
                    py::array_t<double> points, bool compute_sign) {
 
   // Validate meshes
-  // Validate meshes
-  for (ssize_t i = 0; i < meshes.size(); ++i) {
-    const auto &mesh = meshes[i];
-    auto vertices = mesh.vertices.request();
-    auto faces = mesh.faces.request();
-
-    if (vertices.ndim != 2 || vertices.shape[1] != 3) {
-      throw std::invalid_argument("mesh " + std::to_string(i) +
-                                  ": vertices must have shape (N, 3)");
-    }
-
-    if (!(mesh.vertices.flags() & py::array::c_style)) {
-      throw std::invalid_argument("mesh " + std::to_string(i) +
-                                  ": vertices must be C-contiguous");
-    }
-
-    if (faces.ndim != 2 || faces.shape[1] != 3) {
-      throw std::invalid_argument("mesh " + std::to_string(i) +
-                                  ": faces must have shape (N, 3)");
-    }
-
-    if (!(mesh.faces.flags() & py::array::c_style)) {
-      throw std::invalid_argument("mesh " + std::to_string(i) +
-                                  ": faces must be C-contiguous");
-    }
-
-    if (compute_sign) {
-      if (mesh.vertex_normals.size() == 0) {
-        throw std::invalid_argument("mesh " + std::to_string(i) +
-                                    ": vertex_normals must be provided for "
-                                    "signed_distance calculation");
-      }
-
-      auto normals = mesh.vertex_normals.request();
-
-      if (normals.ndim != 2 || normals.shape[1] != 3) {
-        throw std::invalid_argument("mesh " + std::to_string(i) +
-                                    ": vertex_normals must have shape (N, 3)");
-      }
-
-      if (normals.shape[0] != vertices.shape[0]) {
-        throw std::invalid_argument(
-            "mesh " + std::to_string(i) +
-            ": vertex_normals must have the same number of rows as vertices");
-      }
-
-      if (!(mesh.vertex_normals.flags() & py::array::c_style)) {
-        throw std::invalid_argument("mesh " + std::to_string(i) +
-                                    ": vertex_normals must be C-contiguous");
-      }
-    }
+  for (std::size_t i = 0; i < meshes.size(); ++i) {
+    validate_triangle_mesh(meshes[i], i, compute_sign);
   }
 
   // Validate points
@@ -451,30 +400,4 @@ std::tuple<py::array_t<uint32_t>, py::array_t<uint32_t>, py::array_t<double>,
            py::array_t<double>>
 signed_distance(std::vector<triangle_mesh> meshes, py::array_t<double> points) {
   return run_distance_query(meshes, points, true);
-}
-
-PYBIND11_MODULE(pyembree2, m, py::mod_gil_not_used()) {
-  m.doc() = "Point-to-triangle-mesh distance and signed-distance queries "
-            "backed by Embree4";
-
-  py::class_<triangle_mesh>(m, "triangle_mesh")
-      .def(py::init<>())
-      .def(py::init([](py::array_t<float> vertices, py::array_t<uint32_t> faces,
-                       py::array_t<float> vertex_normals) {
-             triangle_mesh t;
-             t.vertices = vertices;
-             t.faces = faces;
-             t.vertex_normals = vertex_normals;
-             return t;
-           }),
-           py::arg("vertices"), py::arg("faces"),
-           py::arg("vertex_normals") = py::array_t<float>())
-      .def_readwrite("vertices", &triangle_mesh::vertices)
-      .def_readwrite("faces", &triangle_mesh::faces)
-      .def_readwrite("vertex_normals", &triangle_mesh::vertex_normals);
-
-  m.def("unsigned_distance", &unsigned_distance, py::arg("meshes"),
-        py::arg("points"));
-  m.def("signed_distance", &signed_distance, py::arg("meshes"),
-        py::arg("points"));
 }

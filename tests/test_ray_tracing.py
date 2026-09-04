@@ -1,6 +1,8 @@
 import numpy as np
 import trimesh
 
+import pyembree2
+
 
 def _generate_rays(num_rays, origin, direction, rng):
     ray_origins = np.tile(origin, (num_rays, 1))
@@ -54,28 +56,64 @@ def test_signed_distance_spheres(random_generator):
     vs = np.full((num_rays, len(meshes)), np.nan)
     for i, mesh in enumerate(meshes):
         locations, index_ray, index_tri = mesh.ray.intersects_location(
-            ray_origins=ray_origins, ray_directions=ray_directions
+            ray_origins=ray_origins,
+            ray_directions=ray_directions,
         )
-        masks[index_ray, i] = True
-        face_indices[index_ray, i] = index_tri
-        distances[index_ray, i] = np.linalg.norm(
-            locations - ray_origins[index_ray], axis=1
+
+        hit_distances = np.linalg.norm(
+            locations - ray_origins[index_ray],
+            axis=1,
         )
+
         triangles = mesh.vertices[mesh.faces[index_tri]]
-        barycentrics = trimesh.triangles.points_to_barycentric(triangles, locations)
-        us[index_ray, i] = barycentrics[:, 0]
-        vs[index_ray, i] = barycentrics[:, 1]
+        barycentrics = trimesh.triangles.points_to_barycentric(
+            triangles,
+            locations,
+        )
+
+        # There can be multiple intersections for the same ray.
+        # Keep only the closest one for each ray.
+        for ray_idx in np.unique(index_ray):
+            hit = np.flatnonzero(index_ray == ray_idx)
+            closest = hit[np.argmin(hit_distances[hit])]
+
+            masks[ray_idx, i] = True
+            face_indices[ray_idx, i] = index_tri[closest]
+            distances[ray_idx, i] = hit_distances[closest]
+            us[ray_idx, i] = barycentrics[closest, 1]
+            vs[ray_idx, i] = barycentrics[closest, 2]
 
     # Combine results of all meshes
-    mask = np.sum(masks, axis=1) > 0
-    min_indices = np.nanargmin(distances[mask], axis=1)
+    expected_mask = np.sum(masks, axis=1) > 0
+    min_indices = np.nanargmin(distances[expected_mask], axis=1)
     expected_mesh_indices = -1 * np.ones(num_rays, dtype=int)
-    expected_mesh_indices[mask] = min_indices
+    expected_mesh_indices[expected_mask] = min_indices
     expected_face_indices = -1 * np.ones(num_rays, dtype=int)
-    expected_face_indices[mask] = face_indices[mask, min_indices]
+    expected_face_indices[expected_mask] = face_indices[expected_mask, min_indices]
     expected_distances = np.full(num_rays, np.nan)
-    expected_distances[mask] = distances[mask, min_indices]
+    expected_distances[expected_mask] = distances[expected_mask, min_indices]
     expected_us = np.full(num_rays, np.nan)
-    expected_us[mask] = us[mask, min_indices]
+    expected_us[expected_mask] = us[expected_mask, min_indices]
     expected_vs = np.full(num_rays, np.nan)
-    expected_vs[mask] = vs[mask, min_indices]
+    expected_vs[expected_mask] = vs[expected_mask, min_indices]
+
+    mesh_indices, face_indices, distances, us, vs = pyembree2.ray_trace(
+        meshes=[
+            pyembree2.triangle_mesh(
+                vertices=mesh.vertices,
+                faces=mesh.faces,
+                vertex_normals=mesh.vertex_normals,
+            )
+            for mesh in meshes
+        ],
+        origins=ray_origins,
+        directions=ray_directions,
+    )
+    mask = np.isfinite(distances)
+
+    np.testing.assert_equal(mask, expected_mask)
+    np.testing.assert_equal(mesh_indices[mask], expected_mesh_indices[expected_mask])
+    np.testing.assert_equal(face_indices[mask], expected_face_indices[expected_mask])
+    np.testing.assert_allclose(distances, expected_distances, atol=1e-5)
+    np.testing.assert_allclose(us, expected_us, atol=1e-5)
+    np.testing.assert_allclose(vs, expected_vs, atol=1e-5)
