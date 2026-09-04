@@ -115,7 +115,7 @@ def test_signed_distance_requires_vertex_normals(random_generator):
     with pytest.raises(
         ValueError,
         match=(
-            r"mesh 0: vertex_normals must be provided for"
+            r"mesh 0: vertex_normals must be provided for "
             r"signed_distance calculation"
         ),
     ):
