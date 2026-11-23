@@ -39,10 +39,14 @@ def test_unsigned_distance_multiple_meshes(random_generator):
     )
 
     pyembree_0_mesh = pyembree2.triangle_mesh(
-        vertices=trimesh_0_mesh.vertices, faces=trimesh_0_mesh.faces
+        vertices=trimesh_0_mesh.vertices,
+        faces=trimesh_0_mesh.faces,
+        vertex_normals=trimesh_0_mesh.vertex_normals,
     )
     pyembree_1_mesh = pyembree2.triangle_mesh(
-        vertices=trimesh_1_mesh.vertices, faces=trimesh_1_mesh.faces
+        vertices=trimesh_1_mesh.vertices,
+        faces=trimesh_1_mesh.faces,
+        vertex_normals=trimesh_1_mesh.vertex_normals,
     )
 
     (
