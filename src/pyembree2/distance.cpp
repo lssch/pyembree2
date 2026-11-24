@@ -2,6 +2,7 @@
 #include <cstddef>
 
 #include <embree4/rtcore.h>
+#include <format>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 #include <stdexcept>
