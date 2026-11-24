@@ -29,7 +29,7 @@ def test_signed_distance_requires_vertex_normals(scene, random_generator):
 
     with pytest.raises(
         RuntimeError,
-        match=(r"mesh 0 needs to have vertex_normals for signed_distance calculation"),
+        match=(r"Mesh 0 needs to have vertex_normals for signed_distance calculation"),
     ):
         pyembree2.signed_distance(
             scene=scene,
