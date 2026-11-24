@@ -2,7 +2,6 @@
 #include <cstddef>
 
 #include <embree4/rtcore.h>
-#include <format>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 #include <stdexcept>
@@ -232,9 +231,8 @@ run_distance_query(const Scene &scene, py::array_t<double> points,
       const auto &mesh = scene.meshes()[i];
       if (!mesh.has_vertex_normals()) {
         throw std::runtime_error(
-            std::format("mesh {} needs to have vertex_normals for "
-                        "signed_distance calculation",
-                        i));
+            "Mesh " + std::to_string(i) +
+            " needs to have vertex_normals for signed_distance calculation");
       }
     }
   }
