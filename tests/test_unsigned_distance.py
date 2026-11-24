@@ -4,7 +4,7 @@ import trimesh
 import pyembree2
 
 
-def test_unsigned_distance_multiple_meshes(random_generator):
+def test_unsigned_distance_multiple_meshes(scene, random_generator):
     trimesh_0_mesh = trimesh.creation.random_soup(100, seed=random_generator)
     trimesh_1_mesh = trimesh.creation.random_soup(300, seed=random_generator)
 
@@ -38,25 +38,20 @@ def test_unsigned_distance_multiple_meshes(random_generator):
         [trimesh_0_triangle_id, trimesh_1_triangle_id],
     )
 
-    pyembree_0_mesh = pyembree2.triangle_mesh(
-        vertices=trimesh_0_mesh.vertices,
-        faces=trimesh_0_mesh.faces,
-        vertex_normals=trimesh_0_mesh.vertex_normals,
-    )
-    pyembree_1_mesh = pyembree2.triangle_mesh(
-        vertices=trimesh_1_mesh.vertices,
-        faces=trimesh_1_mesh.faces,
-        vertex_normals=trimesh_1_mesh.vertex_normals,
-    )
+    for mesh in [trimesh_0_mesh, trimesh_1_mesh]:
+        scene.add_mesh(
+            pyembree2.TriangleMesh(
+                vertices=mesh.vertices,
+                faces=mesh.faces,
+            )
+        )
 
     (
         pyembree_mesh_index,
         pyembree_triangle_id,
         pyembree_closest_points,
         pyembree_singed_distances,
-    ) = pyembree2.unsigned_distance(
-        meshes=[pyembree_0_mesh, pyembree_1_mesh], points=points
-    )
+    ) = pyembree2.unsigned_distance(scene=scene, points=points)
 
     np.testing.assert_equal(trimesh_mesh_index, pyembree_mesh_index)
     np.testing.assert_equal(trimesh_triangle_id, pyembree_triangle_id)

@@ -4,7 +4,7 @@ import trimesh
 import pyembree2
 
 
-def test_signed_distance_spheres(random_generator):
+def test_signed_distance_spheres(scene, random_generator):
     sphere = trimesh.creation.icosphere(radius=3.0)
     sphere.apply_translation((4.0, -2.0, 1.0))
     sphere.visual.face_colors = [0, 255, 0, 255]
@@ -35,20 +35,22 @@ def test_signed_distance_spheres(random_generator):
     mesh_indices = np.argmin(np.abs(signed_distances), axis=1)
     signed_distances = signed_distances[np.arange(n), mesh_indices]
 
+    for mesh in meshes:
+        scene.add_mesh(
+            pyembree2.TriangleMesh(
+                vertices=mesh.vertices,
+                faces=mesh.faces,
+                vertex_normals=mesh.vertex_normals,
+            )
+        )
+
     (
         pyembree_mesh_indices,
         _,
         _,
         pyembree_singed_distances,
     ) = pyembree2.signed_distance(
-        meshes=[
-            pyembree2.triangle_mesh(
-                vertices=mesh.vertices,
-                faces=mesh.faces,
-                vertex_normals=mesh.vertex_normals,
-            )
-            for mesh in meshes
-        ],
+        scene=scene,
         points=points,
     )
 
@@ -56,7 +58,7 @@ def test_signed_distance_spheres(random_generator):
     np.testing.assert_equal(mesh_indices, pyembree_mesh_indices)
 
 
-def test_signed_vs_unsigned_distance_spheres(random_generator):
+def test_signed_vs_unsigned_distance_spheres(scene, random_generator):
     sphere = trimesh.creation.icosphere(radius=3.0)
     sphere.apply_translation((4.0, -2.0, 1.0))
     sphere.visual.face_colors = [0, 255, 0, 255]
@@ -75,20 +77,22 @@ def test_signed_vs_unsigned_distance_spheres(random_generator):
     points[:, 1] = random_generator.uniform(*bounds[:, 1], n)
     points[:, 2] = random_generator.uniform(*bounds[:, 2], n)
 
+    for mesh in meshes:
+        scene.add_mesh(
+            pyembree2.TriangleMesh(
+                vertices=mesh.vertices,
+                faces=mesh.faces,
+                vertex_normals=mesh.vertex_normals,
+            )
+        )
+
     (
         signed_mesh_indices,
         signed_face_indices,
         signed_points,
         signed_distances,
     ) = pyembree2.signed_distance(
-        meshes=[
-            pyembree2.triangle_mesh(
-                vertices=mesh.vertices,
-                faces=mesh.faces,
-                vertex_normals=mesh.vertex_normals,
-            )
-            for mesh in meshes
-        ],
+        scene=scene,
         points=points,
     )
 
@@ -98,14 +102,7 @@ def test_signed_vs_unsigned_distance_spheres(random_generator):
         unsigned_points,
         unsigned_distances,
     ) = pyembree2.unsigned_distance(
-        meshes=[
-            pyembree2.triangle_mesh(
-                vertices=mesh.vertices,
-                faces=mesh.faces,
-                vertex_normals=mesh.vertex_normals,
-            )
-            for mesh in meshes
-        ],
+        scene=scene,
         points=points,
     )
 

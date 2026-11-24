@@ -21,7 +21,8 @@ if __name__ == "__main__":
         dtype=int,
     )
 
-    mesh = pyembree2.triangle_mesh(vertices=vertices, faces=faces)
+    scene = pyembree2.Scene()
+    scene.add_mesh(pyembree2.TriangleMesh(vertices=vertices, faces=faces))
 
     origins = np.array(
         [
@@ -40,7 +41,7 @@ if __name__ == "__main__":
     )
 
     mesh_indices, face_indices, distances, u, v = pyembree2.ray_trace(
-        meshes=[mesh],
+        scene=scene,
         origins=origins,
         directions=directions,
     )
