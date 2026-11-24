@@ -9,7 +9,7 @@
 #include <pybind11/stl.h>
 
 #include "ray_tracing.h"
-#include "triangle_mesh.h"
+#include "scene.h"
 
 namespace py = pybind11;
 
@@ -37,13 +37,8 @@ namespace py = pybind11;
  */
 std::tuple<py::array_t<uint32_t>, py::array_t<uint32_t>, py::array_t<double>,
            py::array_t<double>, py::array_t<double>>
-ray_trace(const std::vector<triangle_mesh> &meshes, py::array_t<double> origins,
+ray_trace(const Scene &scene, py::array_t<double> origins,
           py::array_t<double> directions) {
-
-  // Validate meshes
-  for (std::size_t i = 0; i < meshes.size(); ++i) {
-    validate_triangle_mesh(meshes[i], i, false);
-  }
 
   // Validate origins
   auto origins_info = origins.request();
@@ -73,52 +68,6 @@ ray_trace(const std::vector<triangle_mesh> &meshes, py::array_t<double> origins,
   }
 
   const ssize_t num_rays = origins_info.shape[0];
-
-  // Create Embree device and scene
-  RTCDevice device = rtcNewDevice(nullptr);
-
-  if (!device) {
-    throw std::runtime_error("Failed to create Embree device");
-  }
-
-  RTCScene scene = rtcNewScene(device);
-
-  if (!scene) {
-    rtcReleaseDevice(device);
-    throw std::runtime_error("Failed to create Embree scene");
-  }
-
-  // Add meshes to scene
-  for (const auto &mesh : meshes) {
-    auto vertices = mesh.vertices.request();
-    auto faces = mesh.faces.request();
-
-    RTCGeometry geometry = rtcNewGeometry(device, RTC_GEOMETRY_TYPE_TRIANGLE);
-
-    if (!geometry) {
-      rtcReleaseScene(scene);
-      rtcReleaseDevice(device);
-      throw std::runtime_error("Failed to create Embree geometry");
-    }
-
-    rtcSetSharedGeometryBuffer(
-        geometry, RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, vertices.ptr, 0,
-        sizeof(float) * 3, static_cast<size_t>(vertices.shape[0]));
-
-    rtcSetSharedGeometryBuffer(
-        geometry, RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT3, faces.ptr, 0,
-        sizeof(uint32_t) * 3, static_cast<size_t>(faces.shape[0]));
-
-    rtcCommitGeometry(geometry);
-
-    // Geometries are attached in input-vector order, so Embree's
-    // geometry ID corresponds to the mesh index.
-    rtcAttachGeometry(scene, geometry);
-
-    rtcReleaseGeometry(geometry);
-  }
-
-  rtcCommitScene(scene);
 
   // Allocate output arrays
   py::array_t<uint32_t> mesh_indices(num_rays);
@@ -168,7 +117,7 @@ ray_trace(const std::vector<triangle_mesh> &meshes, py::array_t<double> origins,
 
     ray_hit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
 
-    rtcIntersect1(scene, &ray_hit, nullptr);
+    rtcIntersect1(scene.scene(), &ray_hit, nullptr);
 
     if (ray_hit.hit.geomID == RTC_INVALID_GEOMETRY_ID) {
       mesh_ptr[i] = -1;
@@ -185,9 +134,6 @@ ray_trace(const std::vector<triangle_mesh> &meshes, py::array_t<double> origins,
     u_ptr[i] = static_cast<double>(ray_hit.hit.u);
     v_ptr[i] = static_cast<double>(ray_hit.hit.v);
   }
-
-  rtcReleaseScene(scene);
-  rtcReleaseDevice(device);
 
   return std::make_tuple(std::move(mesh_indices), std::move(triangle_indices),
                          std::move(distances), std::move(u), std::move(v));

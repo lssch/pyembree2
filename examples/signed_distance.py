@@ -21,7 +21,8 @@ if __name__ == "__main__":
         dtype=int,
     )
 
-    mesh = pyembree2.triangle_mesh(vertices=vertices, faces=faces)
+    scene = pyembree2.Scene()
+    scene.add_mesh(pyembree2.TriangleMesh(vertices=vertices, faces=faces))
 
     query = np.array(
         [
@@ -32,7 +33,7 @@ if __name__ == "__main__":
     )
 
     mesh_indices, face_indices, points, signed_distance = pyembree2.signed_distance(
-        meshes=[mesh], points=query
+        scene=scene, points=query
     )
 
     print(f"mesh_indices: {mesh_indices}")

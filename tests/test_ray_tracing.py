@@ -15,7 +15,7 @@ def _generate_rays(num_rays, origin, direction, rng):
 
 
 def _valid_mesh():
-    return pyembree2.triangle_mesh(
+    return pyembree2.TriangleMesh(
         vertices=np.array(
             [
                 [-1.0, -1.0, 0.0],
@@ -54,8 +54,8 @@ def _valid_rays(n=10):
         ),
     ],
 )
-def test_origins_wrong_ndim(origins):
-    mesh = _valid_mesh()
+def test_origins_wrong_ndim(origins, scene):
+    scene.add_mesh(_valid_mesh())
     _, directions = _valid_rays(len(origins) if origins.ndim == 2 else 10)
 
     with pytest.raises(
@@ -63,24 +63,25 @@ def test_origins_wrong_ndim(origins):
         match=r"origins must have shape \(N, 3\)",
     ):
         pyembree2.ray_trace(
-            meshes=[mesh],
+            scene=scene,
             origins=origins,
             directions=directions,
         )
 
 
-def test_origins_not_contiguous():
-    mesh = _valid_mesh()
+def test_origins_not_contiguous(scene):
+    scene.add_mesh(_valid_mesh())
     origins, directions = _valid_rays()
 
     origins = np.asfortranarray(origins)
+    assert not origins.flags.c_contiguous
 
     with pytest.raises(
         ValueError,
         match=r"origins must be C-contiguous",
     ):
         pyembree2.ray_trace(
-            meshes=[mesh],
+            scene=scene,
             origins=origins,
             directions=directions,
         )
@@ -99,8 +100,8 @@ def test_origins_not_contiguous():
         ),
     ],
 )
-def test_directions_wrong_ndim(directions):
-    mesh = _valid_mesh()
+def test_directions_wrong_ndim(directions, scene):
+    scene.add_mesh(_valid_mesh())
     origins, _ = _valid_rays(len(directions) if directions.ndim == 2 else 10)
 
     with pytest.raises(
@@ -108,14 +109,14 @@ def test_directions_wrong_ndim(directions):
         match=r"directions must have shape \(N, 3\)",
     ):
         pyembree2.ray_trace(
-            meshes=[mesh],
+            scene=scene,
             origins=origins,
             directions=directions,
         )
 
 
-def test_directions_not_contiguous():
-    mesh = _valid_mesh()
+def test_directions_not_contiguous(scene):
+    scene.add_mesh(_valid_mesh())
     origins, directions = _valid_rays()
 
     directions = np.asfortranarray(directions)
@@ -125,14 +126,14 @@ def test_directions_not_contiguous():
         match=r"directions must be C-contiguous",
     ):
         pyembree2.ray_trace(
-            meshes=[mesh],
+            scene=scene,
             origins=origins,
             directions=directions,
         )
 
 
-def test_origins_and_directions_different_size():
-    mesh = _valid_mesh()
+def test_origins_and_directions_different_size(scene):
+    scene.add_mesh(_valid_mesh())
 
     origins, _ = _valid_rays(10)
     _, directions = _valid_rays(5)
@@ -142,13 +143,13 @@ def test_origins_and_directions_different_size():
         match=(r"origins and directions must have the same number of rows"),
     ):
         pyembree2.ray_trace(
-            meshes=[mesh],
+            scene=scene,
             origins=origins,
             directions=directions,
         )
 
 
-def test_signed_distance_spheres(random_generator):
+def test_ray_trace(scene, random_generator):
     # Create scene
     sphere = trimesh.creation.icosphere(radius=3.0)
     sphere.apply_translation((4.0, -2.0, 1.0))
@@ -232,15 +233,17 @@ def test_signed_distance_spheres(random_generator):
     expected_vs = np.full(num_rays, np.nan)
     expected_vs[expected_mask] = vs[expected_mask, min_indices]
 
-    mesh_indices, face_indices, distances, us, vs = pyembree2.ray_trace(
-        meshes=[
-            pyembree2.triangle_mesh(
+    for mesh in meshes:
+        scene.add_mesh(
+            pyembree2.TriangleMesh(
                 vertices=mesh.vertices,
                 faces=mesh.faces,
                 vertex_normals=mesh.vertex_normals,
             )
-            for mesh in meshes
-        ],
+        )
+
+    mesh_indices, face_indices, distances, us, vs = pyembree2.ray_trace(
+        scene=scene,
         origins=ray_origins,
         directions=ray_directions,
     )

@@ -4,6 +4,7 @@
 #include <embree4/rtcore.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
+#include <stdexcept>
 
 #include "distance.h"
 #include "triangle_mesh.h"
@@ -114,7 +115,7 @@ static float closest_point_triangle(const vec3 &p, const vec3 &a, const vec3 &b,
  * @brief Per-query state shared with the Embree point-query callback.
  */
 struct query_context {
-  const std::vector<triangle_mesh> *meshes;
+  const std::vector<TriangleMesh> *meshes;
   bool compute_sign;
   uint32_t mesh_index;
   uint32_t face_index;
@@ -138,13 +139,12 @@ struct query_context {
  *
  * @return Always @c true to continue processing the query.
  */
-static bool point_query_callback(RTCPointQueryFunctionArguments *args) {
+bool point_query_callback(RTCPointQueryFunctionArguments *args) {
   auto *context = static_cast<query_context *>(args->userPtr);
 
-  const triangle_mesh &mesh = (*context->meshes)[args->geomID];
-
-  const auto vertices = mesh.vertices.unchecked<2>();
-  const auto faces = mesh.faces.unchecked<2>();
+  const TriangleMesh &mesh = (*context->meshes)[args->geomID];
+  const auto vertices = mesh.vertices().unchecked<2>();
+  const auto faces = mesh.faces().unchecked<2>();
 
   const uint32_t primitive_id = args->primID;
 
@@ -178,7 +178,7 @@ static bool point_query_callback(RTCPointQueryFunctionArguments *args) {
     if (context->compute_sign) {
       // Interpolate vertex normals using the barycentric coordinates of the
       // closest point.
-      const auto normals = mesh.vertex_normals.unchecked<2>();
+      const auto normals = mesh.vertex_normals().unchecked<2>();
       const vec3 na = {normals(i0, 0), normals(i0, 1), normals(i0, 2)};
       const vec3 nb = {normals(i1, 0), normals(i1, 1), normals(i1, 2)};
       const vec3 nc = {normals(i2, 0), normals(i2, 1), normals(i2, 2)};
@@ -222,12 +222,20 @@ static bool point_query_callback(RTCPointQueryFunctionArguments *args) {
  */
 static std::tuple<py::array_t<uint32_t>, py::array_t<uint32_t>,
                   py::array_t<double>, py::array_t<double>>
-run_distance_query(const std::vector<triangle_mesh> &meshes,
-                   py::array_t<double> points, bool compute_sign) {
+run_distance_query(const Scene &scene, py::array_t<double> points,
+                   bool compute_sign) {
 
   // Validate meshes
-  for (std::size_t i = 0; i < meshes.size(); ++i) {
-    validate_triangle_mesh(meshes[i], i, compute_sign);
+  if (compute_sign) {
+    for (size_t i = 0; i < scene.meshes().size(); ++i) {
+      const auto &mesh = scene.meshes()[i];
+      if (!mesh.has_vertex_normals()) {
+        throw std::runtime_error(
+            std::format("mesh {} needs to have vertex_normals for "
+                        "signed_distance calculation",
+                        i));
+      }
+    }
   }
 
   // Validate points
@@ -237,51 +245,6 @@ run_distance_query(const std::vector<triangle_mesh> &meshes,
   }
 
   const ssize_t num_points = points_info.shape[0];
-
-  // Create Embree device and scene
-  RTCDevice device = rtcNewDevice(nullptr);
-  if (!device) {
-    throw std::runtime_error("Failed to create Embree device");
-  }
-
-  RTCScene scene = rtcNewScene(device);
-  if (!scene) {
-    rtcReleaseDevice(device);
-    throw std::runtime_error("Failed to create Embree scene");
-  }
-
-  // Add meshes to scene
-  for (const auto &mesh : meshes) {
-    auto vertices = mesh.vertices.request();
-    auto faces = mesh.faces.request();
-
-    RTCGeometry geometry = rtcNewGeometry(device, RTC_GEOMETRY_TYPE_TRIANGLE);
-
-    if (!geometry) {
-      rtcReleaseScene(scene);
-      rtcReleaseDevice(device);
-      throw std::runtime_error("Failed to create Embree geometry");
-    }
-
-    // Vertex buffer
-    rtcSetSharedGeometryBuffer(
-        geometry, RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, vertices.ptr, 0,
-        sizeof(float) * 3, static_cast<size_t>(vertices.shape[0]));
-
-    // Index buffer
-    rtcSetSharedGeometryBuffer(
-        geometry, RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT3, faces.ptr, 0,
-        sizeof(uint32_t) * 3, static_cast<size_t>(faces.shape[0]));
-
-    rtcSetGeometryPointQueryFunction(geometry, point_query_callback);
-    rtcCommitGeometry(geometry);
-    // Geometries are attached in input-vector order, so Embree's
-    // geometry ID corresponds to the mesh index used in the results.
-    rtcAttachGeometry(scene, geometry);
-    rtcReleaseGeometry(geometry);
-  }
-
-  rtcCommitScene(scene);
 
   py::array_t<double> closest_points({num_points, static_cast<ssize_t>(3)});
   py::array_t<uint32_t> mesh_indices(num_points);
@@ -321,7 +284,7 @@ run_distance_query(const std::vector<triangle_mesh> &meshes,
     // Per-point state passed to the Embree callback.
     // The sentinel indices indicate that no triangle has been found.
     query_context query_data;
-    query_data.meshes = &meshes;
+    query_data.meshes = &scene.meshes();
     query_data.compute_sign = compute_sign;
     query_data.closest_point = vec3{0.0f, 0.0f, 0.0f};
     query_data.closest_normal = vec3{0.0f, 0.0f, 0.0f};
@@ -330,7 +293,7 @@ run_distance_query(const std::vector<triangle_mesh> &meshes,
     query_data.closest_distance_squared =
         std::numeric_limits<float>::infinity();
 
-    rtcPointQuery(scene, &query, &context, nullptr, &query_data);
+    rtcPointQuery(scene.scene(), &query, &context, nullptr, &query_data);
 
     closest_ptr[i * 3 + 0] = static_cast<double>(query_data.closest_point[0]);
     closest_ptr[i * 3 + 1] = static_cast<double>(query_data.closest_point[1]);
@@ -349,9 +312,6 @@ run_distance_query(const std::vector<triangle_mesh> &meshes,
       distance_ptr[i] = unsigned_distance;
     }
   }
-
-  rtcReleaseScene(scene);
-  rtcReleaseDevice(device);
 
   return std::make_tuple(std::move(mesh_indices), std::move(triangle_indices),
                          std::move(closest_points), std::move(distances));
@@ -372,9 +332,8 @@ run_distance_query(const std::vector<triangle_mesh> &meshes,
  */
 std::tuple<py::array_t<uint32_t>, py::array_t<uint32_t>, py::array_t<double>,
            py::array_t<double>>
-unsigned_distance(std::vector<triangle_mesh> meshes,
-                  py::array_t<double> points) {
-  return run_distance_query(meshes, points, false);
+unsigned_distance(const Scene &scene, py::array_t<double> points) {
+  return run_distance_query(scene, points, false);
 }
 
 /**
@@ -398,6 +357,6 @@ unsigned_distance(std::vector<triangle_mesh> meshes,
  */
 std::tuple<py::array_t<uint32_t>, py::array_t<uint32_t>, py::array_t<double>,
            py::array_t<double>>
-signed_distance(std::vector<triangle_mesh> meshes, py::array_t<double> points) {
-  return run_distance_query(meshes, points, true);
+signed_distance(const Scene &scene, py::array_t<double> points) {
+  return run_distance_query(scene, points, true);
 }
